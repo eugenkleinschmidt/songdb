@@ -1,0 +1,4 @@
+pytest
+tox
+isort
+flake8
