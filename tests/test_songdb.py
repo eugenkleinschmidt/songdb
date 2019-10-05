@@ -130,6 +130,12 @@ def test_cmd_file(db):
     assert db.get(where('song') == 'HeiligWO5')['cnt'] == 0
 
 
+def test_cmd_file_dates(db):
+    os.system('songdb --file ' + this_path('test_songdb_dates.txt'))
+    assert '06.01.2019' in db.get(where('song') == 'HeiligWO5')['last_time']
+    assert db.get(where('song') == 'HeiligWO5')['cnt'] == 1
+
+
 def test_cmd_folder(db, tmpdir):
     os.system('songdb --path ' + unpack_test_data(tmpdir))
     assert db.get(where('song') == 'Alles will ich Jesu weihen')['last_time'] is None

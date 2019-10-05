@@ -18,8 +18,13 @@ def main():
         if args.file:
             print('Importing songs into DB from', args.file)
             with open(args.file, 'r') as f:
-                songs = [line.split()[0] for line in f]
-                sdb.import_songs(songs)
+                if ',' in f.readline():
+                    songs = {song.split(',')[0]: song.split(',')[1].split()[0] for song in f}
+                    sdb.update_songs(songs)
+                else:
+                    songs = [line.split()[0] for line in f]
+                    sdb.import_songs(songs)
+
         elif args.path:
             print('Importing songs into DB from', args.path)
             sdb.import_songs(sdb.list_from_folder(args.path, args.ext))
