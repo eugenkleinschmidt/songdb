@@ -56,16 +56,16 @@ class SongDB(object):
         latest_date = date1 if date1 >= date2 else date2
         return latest_date
 
-    def new_song_entry(self, song, last_time=None):
+    def new_song_entry(self, song, last_date=None):
 
-        loc_date = SongDB.validate_date(last_time) if last_time else date.today()
+        loc_date = SongDB.validate_date(last_date) if last_date else date.today()
 
         if self._db.contains(self._query.song == song):
             print('Update song:', song, loc_date.strftime(DATE_FORMAT))
             self._db.update(self._update_song_entry(loc_date), self._query.song == song)
         else:
-            print('New song:', song, loc_date.strftime(DATE_FORMAT) if last_time else 'No date')
-            self._db.insert({'song': song, 'cnt': 1 if last_time else 0, 'last_time': loc_date if last_time else None})
+            print('New song:', song, loc_date.strftime(DATE_FORMAT) if last_date else 'No date')
+            self._db.insert({'song': song, 'cnt': 1 if last_date else 0, 'last_time': loc_date if last_date else None})
 
     def get_song_entry(self, song):
         return self._db.search(self._query.song == song)
@@ -75,8 +75,12 @@ class SongDB(object):
             if not self.get_song_entry(song):
                 self.new_song_entry(song)
 
+    def update_songs(self, songs=dict):
+        for song, last_date in songs.items():
+            self.new_song_entry(song, last_date)
+
     @staticmethod
-    def list_from_folder(path, ext='.pdf'):
+    def list_from_folder(path, ext='.pdf') -> list:
         songs = []
         for root, dir, files in os.walk(path):
             for file in files:

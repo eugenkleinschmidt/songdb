@@ -72,6 +72,16 @@ def test_import_songs(db):
     assert db.get(where('song') == 'HeiligWO5')['cnt'] == 0
 
 
+def test_update_songs(db):
+    with open(this_path('test_songdb_dates.txt'), 'r') as f:
+        songs = {song.split(',')[0]: song.split(',')[1].split()[0] for song in f}
+
+    with SongDB() as sdb:
+        sdb.update_songs(songs)
+    assert '06.01.2019' in db.get(where('song') == 'HeiligWO5')['last_time']
+    assert db.get(where('song') == 'HeiligWO5')['cnt'] == 1
+
+
 def test_validate_date():
     assert SongDB.validate_date(
         datetime.datetime.today().date().strftime('%d.%m.%Y')) == datetime.datetime.today().date()
