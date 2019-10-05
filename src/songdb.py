@@ -31,6 +31,7 @@ class SongDB(object):
 
         self._db = TinyDB(db, storage=serialization, sort_keys=True, indent=4,
                           separators=(',', ': '))
+        self._query = Query()
 
     @staticmethod
     def _update_song_entry(last_time):
@@ -59,27 +60,31 @@ class SongDB(object):
 
         loc_date = SongDB.validate_date(last_time) if last_time else date.today()
 
-        with self._db as db:
-            song_entry = Query()
-            if db.contains(song_entry.song == song):
-                print('Update song:', song, loc_date.strftime(DATE_FORMAT))
-                db.update(self._update_song_entry(loc_date), song_entry.song == song)
-            else:
-                print('New song:', song, loc_date.strftime(DATE_FORMAT) if last_time else 'No date')
-                db.insert({'song': song, 'cnt': 1 if last_time else 0, 'last_time': loc_date if last_time else None})
+        if self._db.contains(self._query.song == song):
+            print('Update song:', song, loc_date.strftime(DATE_FORMAT))
+            self._db.update(self._update_song_entry(loc_date), self._query.song == song)
+        else:
+            print('New song:', song, loc_date.strftime(DATE_FORMAT) if last_time else 'No date')
+            self._db.insert({'song': song, 'cnt': 1 if last_time else 0, 'last_time': loc_date if last_time else None})
 
     def get_song_entry(self, song):
-        song_entry = Query()
-        return self._db.search(song_entry.song == song)
+        return self._db.search(self._query.song == song)
 
-    def import_songs_from_folder(self, path):
+    def import_songs(self, songs=list):
+        for song in songs:
+            if not self.get_song_entry(song):
+                self.new_song_entry(song)
+
+    @staticmethod
+    def list_from_folder(path, ext='.pdf'):
+        songs = []
         for root, dir, files in os.walk(path):
             for file in files:
-                if file.lower().endswith('.pdf'):
-                    self.new_song_entry(os.path.join(root, file))
-
-    def __del__(self):
-        self._db.close()
+                if file.lower().endswith(ext):
+                    song = os.path.splitext(file)[0]
+                    if song not in songs:
+                        songs.append(song)
+        return songs
 
     def __enter__(self):
         return self
