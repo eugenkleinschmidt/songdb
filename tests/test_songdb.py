@@ -82,6 +82,16 @@ def test_update_songs(db):
     assert db.get(where('song') == 'HeiligWO5')['cnt'] == 1
 
 
+def test_clear_cache(db):
+    with open(this_path('test_songdb_dates.txt'), 'r') as f:
+        songs = {song.split(',')[0]: song.split(',')[1].split()[0] for song in f}
+
+    with SongDB() as sdb:
+        sdb.update_songs(songs)
+        sdb.clear_cache()
+    assert db.get(where('song') == 'HeiligWO5') is None
+
+
 def test_validate_date():
     assert SongDB.validate_date(
         datetime.datetime.today().date().strftime('%d.%m.%Y')) == datetime.datetime.today().date()

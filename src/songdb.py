@@ -26,6 +26,7 @@ class SongDB(object):
     SONG_DB_PATH = 'songdb.json'
 
     def __init__(self, db=SONG_DB_PATH):
+        CachingMiddleware.WRITE_CACHE_SIZE = 100000  # For context manager to be on save sight to make a cache clear
         serialization = SerializationMiddleware(CachingMiddleware(JSONStorage))
         serialization.register_serializer(DateTimeSerializer(), 'TinyDate')
 
@@ -95,3 +96,11 @@ class SongDB(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._db.close()
+
+    def clear_cache(self):
+        # Serializer Middleware
+        self._db.storage._cache_modified_count = 0
+        self._db.storage.cache = None
+        # Caching Middleware
+        self._db.storage.storage._cache_modified_count = 0
+        self._db.storage.storage.cache = None
