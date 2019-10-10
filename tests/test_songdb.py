@@ -3,7 +3,6 @@ import os
 import shutil
 
 import pytest
-from cli import main
 from tinydb import where
 
 from songdb import SongDB
@@ -111,17 +110,6 @@ def test_compare_date():
     d1 = datetime.date(2019, 1, 1)
     d2 = datetime.date(2019, 1, 2)
     assert SongDB.compare_date(d1, d2) == d2
-
-
-@pytest.mark.skip('Not run in tox because of passed arguments')
-def test_main(db):
-    # TODO find out how to pass arguments to argparse
-    # https://stackoverflow.com/questions/18160078/how-do-you-write-tests-for-the-argparse-portion-of-a-python-module
-    import sys
-    sys.argv.append('01.01.2019')
-    main()
-    assert '01.01.2019' in db.get(where('song') == 'test_songdb.py::test_main')['last_time']
-    assert db.get(where('song') == 'test_songdb.py::test_main')['cnt'] == 1
 
 
 def test_cmd_new_song(db):
