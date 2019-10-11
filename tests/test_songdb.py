@@ -2,6 +2,8 @@ import datetime
 import os
 import shutil
 
+import cli
+import mock
 import pytest
 from tinydb import where
 
@@ -112,6 +114,16 @@ def test_compare_date():
     assert SongDB.compare_date(d1, d2) == d2
 
 
+@mock.patch('cli.argparse')
+def test_cli(mock_argparse):
+    class mock_args():
+        file = this_path('test_songdb.txt')
+
+    with mock.patch.object(cli.argparse.ArgumentParser(), 'parse_args', return_value=mock_args):
+        cli.main()
+
+
+# work only in tox after setup.py installed
 def test_cmd_new_song(db):
     os.system('songdb --new_song "Test Song" --date 01.02.3456')
     assert '01.02.3456' in db.get(where('song') == 'Test Song')['last_time']

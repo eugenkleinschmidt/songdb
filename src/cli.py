@@ -28,7 +28,7 @@ def main():
         elif args.path:
             print('Importing songs into DB from', args.path)
             sdb.import_songs(sdb.list_from_folder(args.path, args.ext))
-        if args.new_song:
+        else:
             if args.date:
                 print('Including used song into DB')
                 sdb.new_song_entry(args.new_song, args.date)
