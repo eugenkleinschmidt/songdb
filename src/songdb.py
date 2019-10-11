@@ -22,15 +22,17 @@ class DateTimeSerializer(Serializer):
         return datetime.strptime(s, DATE_FORMAT).date()
 
 
-class SongDB(object):
+class SongDB(TinyDB):
     SONG_DB_PATH = 'songdb.json'
 
     def __init__(self, db=SONG_DB_PATH):
+        CachingMiddleware.WRITE_CACHE_SIZE = 100000  # For context manager to be on save sight to make a cache clear
         serialization = SerializationMiddleware(CachingMiddleware(JSONStorage))
         serialization.register_serializer(DateTimeSerializer(), 'TinyDate')
 
-        self._db = TinyDB(db, storage=serialization, sort_keys=True, indent=4,
-                          separators=(',', ': '))
+        super().__init__(db, storage=serialization, sort_keys=True, indent=4,
+                         separators=(',', ': '))
+
         self._query = Query()
 
     @staticmethod
@@ -60,15 +62,15 @@ class SongDB(object):
 
         loc_date = SongDB.validate_date(last_date) if last_date else date.today()
 
-        if self._db.contains(self._query.song == song):
+        if self.contains(self._query.song == song):
             print('Update song:', song, loc_date.strftime(DATE_FORMAT))
-            self._db.update(self._update_song_entry(loc_date), self._query.song == song)
+            self.update(self._update_song_entry(loc_date), self._query.song == song)
         else:
             print('New song:', song, loc_date.strftime(DATE_FORMAT) if last_date else 'No date')
-            self._db.insert({'song': song, 'cnt': 1 if last_date else 0, 'last_time': loc_date if last_date else None})
+            self.insert({'song': song, 'cnt': 1 if last_date else 0, 'last_time': loc_date if last_date else None})
 
     def get_song_entry(self, song):
-        return self._db.search(self._query.song == song)
+        return self.search(self._query.song == song)
 
     def import_songs(self, songs=list):
         for song in songs:
@@ -90,8 +92,10 @@ class SongDB(object):
                         songs.append(song)
         return songs
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._db.close()
+    def clear_cache(self):
+        # Serializer Middleware
+        self.storage._cache_modified_count = 0
+        self.storage.cache = None
+        # Caching Middleware
+        self.storage.storage._cache_modified_count = 0
+        self.storage.storage.cache = None
