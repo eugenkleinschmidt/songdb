@@ -1,2 +1,4 @@
 tinydb
 tinydb_serialization
+
+-r tests/requirements.txt

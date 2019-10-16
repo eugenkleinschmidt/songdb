@@ -1,10 +1,10 @@
 [paths]
-source = src
+source = songdb
 
 [run]
 branch = true
 source =
-    src
+    songdb
     tests
 parallel = true
 
@@ -13,5 +13,5 @@ show_missing = true
 precision = 2
 omit =
     *migrations*
-    src\__init__.py
-    src\__main__.py
+    songdb\__init__.py
+    songdb\__main__.py

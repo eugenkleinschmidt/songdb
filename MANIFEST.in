@@ -1,0 +1,11 @@
+graft songdb
+graft tests
+
+include .coveragerc
+include .editorconfig
+include conftest.py
+include requirements.txt
+include setup.cfg
+include tox.ini
+
+exclude *__pycache__* *json*
