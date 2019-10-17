@@ -4,10 +4,9 @@ import shutil
 
 import mock
 import pytest
-from tinydb import where
-
 import songdb.cli
 from songdb.songdb import SongDB
+from tinydb import where
 
 
 def this_path(path):

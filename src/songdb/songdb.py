@@ -1,13 +1,10 @@
 import os
-from datetime import date
-from datetime import datetime
+from datetime import date, datetime
 
-from tinydb import Query
-from tinydb import TinyDB
+from tinydb import Query, TinyDB
 from tinydb.middlewares import CachingMiddleware
 from tinydb.storages import JSONStorage
-from tinydb_serialization import SerializationMiddleware
-from tinydb_serialization import Serializer
+from tinydb_serialization import SerializationMiddleware, Serializer
 
 DATE_FORMAT = '%d.%m.%Y'
 
