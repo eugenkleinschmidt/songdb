@@ -6,10 +6,11 @@ setup(
     package_dir={'': 'src'},
     include_package_data=True,
     zip_safe=False,
-    install_requires=['tinydb', 'tinydb_serialization'],
+    install_requires=['fpdf', 'tinydb', 'tinydb_serialization'],
     entry_points={
         'console_scripts': [
             "songdb=songdb.cli:main",
+            "setlist=setlist.cli:main",
         ]
     },
 )

@@ -1,4 +1,3 @@
-tinydb
-tinydb_serialization
-
+-r src/setlist/requirements.txt
+-r src/songdb/requirements.txt
 -r tests/requirements.txt
