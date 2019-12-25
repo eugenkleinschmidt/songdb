@@ -2,7 +2,9 @@ import os
 from datetime import date
 
 import mock
+import pytest
 import setlist.cli
+from conftest import check_installed
 from setlist.setlist import SetList
 from songdb.songdb import SongDB
 
@@ -48,6 +50,7 @@ def test_new_setlist(db):
     assert db.get_song_entry('Heilig')[0]['last_time'] == db.validate_date('01.02.3456')
 
 
+@pytest.mark.skipif(not check_installed, reason='songdb is not installed. Test skipped')
 @mock.patch('setlist.cli.argparse')
 def test_cli(mock_argparse):
     class mock_args():
@@ -59,17 +62,20 @@ def test_cli(mock_argparse):
         setlist.cli.main()
 
 
+@pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
 def test_cmd(db):
     os.system('setlist --date 01.02.3456 --song-group Anbetung Heilig')
     db = SongDB()
     assert db.get_song_entry('Heilig')[0]['last_time'] == db.validate_date('01.02.3456')
 
 
+@pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
 def test_cmd_not_available_song(db):
     os.system('setlist --date 01.02.3456 --song-group Anbetung "Test New Song"')
     db = SongDB()
     assert db.get_song_entry('Test New Song') == []
 
 
+@pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
 def test_cmd_help():
     os.system('setlist')

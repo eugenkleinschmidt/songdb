@@ -1,6 +1,6 @@
 import argparse
 
-from setlist.setlist import SetList
+from .setlist import SetList
 
 
 def main():

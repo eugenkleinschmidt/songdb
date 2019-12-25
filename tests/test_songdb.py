@@ -5,6 +5,7 @@ import shutil
 import mock
 import pytest
 import songdb.cli
+from conftest import check_installed
 from songdb.songdb import SongDB
 from tinydb import where
 
@@ -107,6 +108,7 @@ class TestSongDB(object):
         assert SongDB.compare_date(d1, d2) == d2
 
 
+@pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
 class TestCmd(object):
 
     @mock.patch('songdb.cli.argparse')

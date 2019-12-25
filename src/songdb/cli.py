@@ -1,6 +1,6 @@
 import argparse
 
-from songdb.songdb import SongDB
+from .songdb import SongDB
 
 
 def main():

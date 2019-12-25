@@ -1,3 +1,4 @@
+import subprocess
 import pytest
 from tinydb import TinyDB
 
@@ -16,3 +17,13 @@ def db():
     db.purge_tables()
     db.insert_multiple(DB)
     return db
+
+
+def check_installed():
+    try:
+        subprocess.run('setlist')
+        subprocess.run('songdb')
+    except FileNotFoundError:
+        return False
+    else:
+        return True
