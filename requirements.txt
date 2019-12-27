@@ -1,3 +1,4 @@
 -r src/setlist/requirements.txt
 -r src/songdb/requirements.txt
+-r src/songdb_gui/requirements.txt
 -r tests/requirements.txt

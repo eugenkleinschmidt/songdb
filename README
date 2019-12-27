@@ -1,0 +1,12 @@
+# Song and Setlist Database
+
+## Idea
+Song DB
+- songname
+- link (youtube, ...)
+- cheet (PDF, ...)
+
+Setlist
+- date
+- topic
+- ref to song

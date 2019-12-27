@@ -1,6 +1,8 @@
 import os
 from datetime import date, datetime
 
+from .utils import get_logger
+
 from tinydb import Query, TinyDB
 from tinydb.middlewares import CachingMiddleware
 from tinydb.storages import JSONStorage
@@ -17,6 +19,9 @@ class DateTimeSerializer(Serializer):
 
     def decode(self, s):
         return datetime.strptime(s, DATE_FORMAT).date()
+
+
+log = get_logger()
 
 
 class SongDB(TinyDB):
@@ -44,7 +49,7 @@ class SongDB(TinyDB):
         return transform
 
     @staticmethod
-    def validate_date(date_text):
+    def validate_date(date_text: str):
         try:
             return datetime.date(datetime.strptime(date_text, DATE_FORMAT))
         except ValueError:
@@ -55,31 +60,42 @@ class SongDB(TinyDB):
         latest_date = date1 if date1 >= date2 else date2
         return latest_date
 
-    def new_song_entry(self, song, last_date=None):
-
-        loc_date = SongDB.validate_date(last_date) if last_date else date.today()
+    def new_song_entry(self, song: str, link: str, cheet: str):
 
         if self.contains(self._query.song == song):
-            print('Update song:', song, loc_date.strftime(DATE_FORMAT))
+            log('Update song:', song, loc_date.strftime(DATE_FORMAT))
             self.update(self._update_song_entry(loc_date), self._query.song == song)
         else:
-            print('New song:', song, loc_date.strftime(DATE_FORMAT) if last_date else 'No date')
+            log('New song:', song, loc_date.strftime(DATE_FORMAT) if last_date else 'No date')
             self.insert({'song': song, 'cnt': 1 if last_date else 0, 'last_time': loc_date if last_date else None})
 
-    def get_song_entry(self, song):
+    def update_song_date(self, song: str, setlist_date: str):
+        loc_date = SongDB.validate_date(setlist_date) if setlist_date else date.today()
+
+        if self.contains(self._query.song == song):
+            log(f'New date {loc_date.strftime(DATE_FORMAT)} for song {song}')
+            self.update(self._update_song_entry(loc_date), self._query.song == song)
+
+    def get_song_entry(self, song: str):
         return self.search(self._query.song == song)
 
-    def import_songs(self, songs=list):
+    def import_songs(self, songs: list):
         for song in songs:
             if not self.get_song_entry(song):
                 self.new_song_entry(song)
 
-    def update_songs(self, songs=dict):
+    def update_songs(self, songs: dict):
         for song, last_date in songs.items():
             self.new_song_entry(song, last_date)
 
     @staticmethod
     def list_from_folder(path, ext='.pdf') -> list:
+        """
+        Create list of songs from folder path with matching extension
+        :param path: Path to folder with songs files
+        :param ext: Extention of song files
+        :return: List of songs
+        """
         songs = []
         for root, dir, files in os.walk(path):
             for file in files:
