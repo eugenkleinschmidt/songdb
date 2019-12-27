@@ -23,7 +23,7 @@ def test_setlist():
     pList = SetList()
 
     pList.date(date.today())
-    pList.song(song[0], link='www.web.de')
+    pList.song(song[0], link='https://www.songbeamer.de/download.htm')
 
     pList.group('Lobpreis')
     pList.song(song[1])
