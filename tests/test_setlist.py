@@ -19,63 +19,61 @@ def current_test_name():
     return os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
 
 
-def test_setlist():
-    pList = SetList()
+class TestSetlist(object):
+    def test_setlist(self):
+        pList = SetList()
 
-    pList.date(date.today())
-    pList.song(song[0], link='https://www.songbeamer.de/download.htm')
+        pList.date(date.today())
+        pList.song(song[0], link='https://www.songbeamer.de/download.htm')
 
-    pList.group('Lobpreis')
-    pList.song(song[1])
-    pList.song(song[2])
+        pList.group('Lobpreis')
+        pList.song(song[1])
+        pList.song(song[2])
 
-    pList.group('Predigt')
-    pList.song(song[3])
+        pList.group('Predigt')
+        pList.song(song[3])
 
-    pList.group('Abendmahl')
-    pList.song(song[5])
-    pList.song(song[6])
+        pList.group('Abendmahl')
+        pList.song(song[5])
+        pList.song(song[6])
 
-    pList.group('Spende Ende')
-    pList.song(song[7])
-    pList.song(song[8])
+        pList.group('Spende Ende')
+        pList.song(song[7])
+        pList.song(song[8])
 
-    pList.output('test_setlist.pdf', 'F')
+        pList.output('test_setlist.pdf', 'F')
 
-
-def test_new_setlist(db):
-    pList = SetList()
-    pList.new_setlist('01.02.3456', [['Anbetung', 'Heilig'], ])
-    db = SongDB()
-    assert db.get_song_entry('Heilig')[0]['last_time'] == db.validate_date('01.02.3456')
-
-
-@pytest.mark.skipif(not check_installed, reason='songdb is not installed. Test skipped')
-@mock.patch('setlist.cli.argparse')
-def test_cli(mock_argparse):
-    class mock_args():
-        date = '01.01.2019'
-        song_group = [['Lobpreis', 'Neues Lied', 'Zweites Neues Lied'], ]
-        force = True
-
-    with mock.patch.object(setlist.cli.argparse.ArgumentParser(), 'parse_args', return_value=mock_args):
-        setlist.cli.main()
+    def test_new_setlist(self, db):
+        pList = SetList()
+        pList.new_setlist('01.02.3456', [['Anbetung', 'Heilig'], ])
+        db = SongDB()
+        assert db.get_song_entry('Heilig')[0]['last_time'] == db.validate_date('01.02.3456')
 
 
 @pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
-def test_cmd(db):
-    os.system('setlist --date 01.02.3456 --song-group Anbetung Heilig')
-    db = SongDB()
-    assert db.get_song_entry('Heilig')[0]['last_time'] == db.validate_date('01.02.3456')
+class TestCmd(object):
+    @mock.patch('setlist.cli.argparse')
+    def test_cli(self, mock_argparse):
+        class mock_args():
+            date = '01.01.2019'
+            song_group = [['Lobpreis', 'Neues Lied', 'Zweites Neues Lied'], ]
+            force = True
 
+        with mock.patch.object(setlist.cli.argparse.ArgumentParser(), 'parse_args', return_value=mock_args):
+            setlist.cli.main()
 
-@pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
-def test_cmd_not_available_song(db):
-    os.system('setlist --date 01.02.3456 --song-group Anbetung "Test New Song"')
-    db = SongDB()
-    assert db.get_song_entry('Test New Song') == []
+    @pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
+    def test_cmd(self, db):
+        os.system('setlist --date 01.02.3456 --song-group Anbetung Heilig')
+        db = SongDB()
+        assert db.get_song_entry('Heilig')[0]['last_time'] == db.validate_date('01.02.3456')
 
+    @pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
+    def test_cmd_not_available_song(db):
+        os.system('setlist --date 01.02.3456 --song-group Anbetung "Test New Song"')
+        db = SongDB()
+        assert db.get_song_entry('Test New Song') == []
 
-@pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
-def test_cmd_help():
-    os.system('setlist')
+    @pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
+    def test_cmd_help(self):
+        os.system('setlist')

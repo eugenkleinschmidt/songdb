@@ -5,9 +5,9 @@ from tinydb import TinyDB
 DB_PATH = 'songdb.json'
 
 DB = (
-    {'song': 'Heilig', 'cnt': 0, 'last_time': None},
-    {'song': 'Heilig2', 'cnt': 1, 'last_time': '01.01.2019'},
-    {'song': 'Heilig3', 'cnt': 2, 'last_time': '01.01.2019'},
+    {'song': 'Heilig', 'link': 0, 'sheet': None},
+    {'song': 'Heilig2', 'link': 1, 'sheet': '01.01.2019'},
+    {'song': 'Heilig3', 'link': 2, 'sheet': '01.01.2019'},
 )
 
 
