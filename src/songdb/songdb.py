@@ -25,9 +25,9 @@ log = get_logger()
 
 
 class SongDB(TinyDB):
-    SONG_DB_PATH = 'songdb.json'
+    SONG_DB_DEFAULT_PATH = 'songdb.json'
 
-    def __init__(self, db=SONG_DB_PATH):
+    def __init__(self, db=SONG_DB_DEFAULT_PATH):
         CachingMiddleware.WRITE_CACHE_SIZE = 100000  # For context manager to be on save sight to make a cache clear
         serialization = SerializationMiddleware(CachingMiddleware(JSONStorage))
         serialization.register_serializer(DateTimeSerializer(), 'TinyDate')
@@ -73,16 +73,19 @@ class SongDB(TinyDB):
         :param setlist_date: date when song is/was performed
         :return:
         """
-        song = self.search(self._query.song == song)
-        if song and len(song) == 1:
+        loc_song = self.search(self._query.song == song)
+        if loc_song and len(loc_song) == 1:
+            loc_song = loc_song[0]
             loc_date = SongDB.validate_date(setlist_date) if setlist_date else date.today()
-            log.info(f'New date {loc_date.strftime(DATE_FORMAT)} for song {song["song"]}')
-            if song['dates']:
-                song['dates'].append(setlist_date)
-                song['dates'].sort()
+            log.info(f'New date {loc_date.strftime(DATE_FORMAT)} for song {loc_song["song"]}')
+            if 'dates' in loc_song:
+                loc_song['dates'].append(setlist_date)
+                loc_song['dates'].sort(reverse=True)
             else:
-                song['dates'] = [setlist_date, ]
+                loc_song['dates'] = [setlist_date, ]
+            self.write_back([loc_song, ])
         else:
+            # TODO or to many found
             log.warning(f'Song {song} not in DB. No update of dates.')
 
     def get_song_entry(self, song: str):
