@@ -88,6 +88,9 @@ class SongDB(TinyDB):
             # TODO or to many found
             log.warning(f'Song {song} not in DB. No update of dates.')
 
+    def get_song_dates(self, song: str):
+        return self.search((self._query.song == song) & (self._query.dates.exists()))[0]['dates']
+
     def get_song_entry(self, song: str):
         return self.search(self._query.song == song)
 
