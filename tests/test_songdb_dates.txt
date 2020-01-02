@@ -1,6 +1,0 @@
-HeiligWO0, 01.01.2019
-HeiligWO1, 02.01.2019
-HeiligWO2, 03.01.2019
-HeiligWO3, 04.01.2019
-HeiligWO4, 05.01.2019
-HeiligWO5, 06.01.2019

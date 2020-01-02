@@ -30,27 +30,31 @@ today = datetime.datetime.today().date().strftime('%d.%m.%Y')
 
 class TestSongDB(object):
     def test_new_song_entry(self, db):
-
         with SongDB() as sdb:  # close needed as cachedmiddle used --> context manager
-            sdb.new_song_entry("Heilig", today)
-        assert today in db.get(where('song') == 'Heilig')['link']
-        assert db.get(where('song') == 'Heilig')['sheet'] == 1
+            sdb.new_song_entry('Heilig', 'youtube', 'pfad')
+        assert db.get(where('song') == 'Heilig')['link'] == 'youtube'
+        assert db.get(where('song') == 'Heilig')['sheet'] == 'pfad'
 
         with SongDB() as sdb:
             sdb.new_song_entry("New_Song")
         assert db.get(where('song') == 'New_Song')['link'] is None
-        assert db.get(where('song') == 'New_Song')['sheet'] == 0
+        assert db.get(where('song') == 'New_Song')['sheet'] is None
 
     def test_update_dates(self, db):
+        dates = []
         with SongDB() as sdb:
-            sdb.new_song_entry("New_Song", "01.02.2134")
-        assert "01.02.2134" in db.get(where('song') == 'New_Song')['link']
-        assert db.get(where('song') == 'New_Song')['sheet'] == 1
+            sdb.update_song_date("Heilig", "01.02.2134")
+            dates = sdb.get_song_dates("Heilig")
+
+        assert "01.02.2134" in dates
+        assert len(dates) == 1
 
         with SongDB() as sdb:
-            sdb.new_song_entry("New_Song", "01.02.2020")
-        assert "01.02.2134" in db.get(where('song') == 'New_Song')['link']
-        assert db.get(where('song') == 'New_Song')['sheet'] == 2
+            sdb.update_song_date("Heilig", "01.02.2020")
+            dates = sdb.get_song_dates("Heilig")
+        assert "01.02.2134" == dates[0]
+        assert "01.02.2020" == dates[1]
+        assert len(dates) == 2
 
     def test_get_song_entry(self, db):
         sdb = SongDB()
@@ -75,7 +79,7 @@ class TestSongDB(object):
         assert db.get(where('song') == 'HeiligWO5')['sheet'] == 0
 
     def test_update_songs(self, db):
-        with open(this_path('test_songdb_dates.txt'), 'r') as f:
+        with open(this_path('test_songdb_full.txt'), 'r') as f:
             songs = {song.split(',')[0]: song.split(',')[1].split()[0] for song in f}
 
         with SongDB() as sdb:
@@ -84,7 +88,7 @@ class TestSongDB(object):
         assert db.get(where('song') == 'HeiligWO5')['sheet'] == 1
 
     def test_clear_cache(self, db):
-        with open(this_path('test_songdb_dates.txt'), 'r') as f:
+        with open(this_path('test_songdb_full.txt'), 'r') as f:
             songs = {song.split(',')[0]: song.split(',')[1].split()[0] for song in f}
 
         with SongDB() as sdb:
@@ -139,7 +143,7 @@ class TestCmd(object):
         assert db.get(where('song') == 'HeiligWO5')['sheet'] == 0
 
     def test_cmd_file_dates(self, db):
-        os.system('songdb --file ' + this_path('test_songdb_dates.txt'))
+        os.system('songdb --file ' + this_path('test_songdb_full.txt'))
         assert '06.01.2019' in db.get(where('song') == 'HeiligWO5')['link']
         assert db.get(where('song') == 'HeiligWO5')['sheet'] == 1
 
