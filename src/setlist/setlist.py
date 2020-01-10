@@ -57,7 +57,7 @@ class SetlistDB(object):
 
     def new_setlist_entry(self, name: str, date: str, songs: list):
         """
-        Create or update an a song. Update means new link or cheet path
+        Create or update an a song. Update means new link or sheet path
         :param name: name of setlist
         :param date: date of setlist
         :param songs: list of songs
@@ -86,13 +86,12 @@ class SetlistDB(object):
 
         loc_sl = self.sldb.search((self.sdb.query.setlist == name) & (self.sdb.query.date == date))
         if len(loc_sl) == 1:
-            with SongDB() as sdb:
-                for s in loc_sl[0]['songs']:
-                    if sdb.get_song_entry(s):
-                        # TODO logging
-                        sdb.update_song_date(s, date)
-                    else:
-                        sdb.new_song_entry(s)
+            for s in loc_sl[0]['songs']:
+                if self.sdb.get_song_entry(s):
+                    # TODO logging
+                    self.sdb.update_song_date(s, date)
+                else:
+                    self.sdb.new_song_entry(s)
 
     def __enter__(self):
         return self

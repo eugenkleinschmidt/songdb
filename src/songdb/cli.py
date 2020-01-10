@@ -1,6 +1,6 @@
 import argparse
 
-from .songdb import SongDB, import_songs, list_from_folder
+from .songdb import SongDB, import_songs, list_from_folder, splitline_from_file
 
 
 def main():
@@ -19,8 +19,8 @@ def main():
         if args.file:
             print('Importing songs into DB from', args.file)
             with open(args.file, 'r') as f:
-                songs = [song.split(',; ') for song in f]
-                import_songs(sdb, songs)
+                with SongDB() as sdb:
+                    import_songs(sdb, splitline_from_file(f))
         elif args.path:
             print('Importing songs into DB from', args.path)
             import_songs(sdb, list_from_folder(args.path, args.ext))

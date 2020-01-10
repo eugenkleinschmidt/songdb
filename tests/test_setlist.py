@@ -64,29 +64,51 @@ class TestSetlistDB(object):
             sl_id = sldb.new_setlist_entry('Gottesdienst', '01.02.3456', ['Heilig', 'Heilig2'])
             sldb.validate_setlist(*sl_id)
         assert db.table('songs').get(where('song') == 'Heilig')['dates'] == ['01.02.3456', ]
-        assert db.table('songs').get(where('song') == 'Heilig')['dates'][0] == ['01.02.3456', '01.01.2019']
+        assert db.table('songs').get(where('song') == 'Heilig2')['dates'] == ['01.02.3456', '01.01.2019']
 
 
 @pytest.mark.skipif(not check_installed(), reason='songdb is not installed. Test skipped')
 class TestCmd(object):
     @mock.patch('setlist.cli.argparse')
-    def test_cli(self, mock_argparse):
-        class mock_args():
+    def test_cli(self, mock_argparse, db):
+        # TestCase 1
+        class MockArgs:
             name = 'Gottesdienst'
-            date = '01.01.2019'
-            song_group = [['Lobpreis', 'Neues Lied', 'Zweites Neues Lied'], ]
+            date = '01.02.3456'
+            song_group = [['Lobpreis', 'Neues Lied', 'Zweites Neues Lied', 'Heilig'], ]
             validate = None
 
-        with mock.patch.object(cli.argparse.ArgumentParser(), 'parse_args', return_value=mock_args):
+        with mock.patch.object(cli.argparse.ArgumentParser(), 'parse_args', return_value=MockArgs):
             cli.main()
+        assert db.table('setlists').get(where('setlist') == 'Gottesdienst')['date'] == '01.02.3456'
+        assert db.table('setlists').get(where('setlist') == 'Gottesdienst')['songs'] == ['Neues Lied', 'Zweites Neues Lied', 'Heilig']
+
+        # TestCase 2 Validate
+        class MockArgs:
+            name = 'Gottesdienst'
+            date = '01.02.3456'
+            song_group = None
+            validate = True
+
+        with mock.patch.object(cli.argparse.ArgumentParser(), 'parse_args', return_value=MockArgs):
+            cli.main()
+        assert db.table('songs').get(where('song') == 'Heilig')['dates'] == ['01.02.3456', ]
 
     def test_cmd(self, db):
-        os.system('setlist --name Gottesdienst --date 01.02.3456 --song-group Anbetung Heilig')
-        assert db.get(where('setlist') == 'Gottesdienst')['date'] == '01.02.3456'
-        # db = SongDB()
-        # assert db.get_song_entry('Heilig')[0]['last_time'] == db.validate_date('01.02.3456')
+        os.system('setlist --name Gottesdienst --date 01.02.3456 --song-group Anbetung Heilig "Neues Lied"')
+        assert db.table('setlists').get(where('setlist') == 'Gottesdienst')['date'] == '01.02.3456'
 
-    def test_cmd_not_available_song(db):
+        os.system('setlist --name Gottesdienst --date 01.02.3456 --validate')
+        assert db.table('songs').get(where('song') == 'Heilig')['dates'] == ['01.02.3456', ]
+
+    def test_cmd_short(self, db):
+        os.system('setlist -n Gottesdienst -d 01.02.3456 -sg Anbetung Heilig')
+        assert db.table('setlists').get(where('setlist') == 'Gottesdienst')['date'] == '01.02.3456'
+
+        os.system('setlist -n Gottesdienst -d 01.02.3456 -v')
+        assert db.table('songs').get(where('song') == 'Heilig')['dates'] == ['01.02.3456', ]
+
+    def test_cmd_not_available_song(self, db):
         os.system('setlist --name Gottesdienst --date 01.02.3456 --song-group Anbetung "Test New Song"')
         db = SongDB()
         assert db.get_song_entry('Test New Song') == []

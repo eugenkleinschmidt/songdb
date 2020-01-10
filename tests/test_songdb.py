@@ -6,8 +6,9 @@ import mock
 import pytest
 import songdb.cli as cli
 from conftest import check_installed
-from songdb.songdb import SongDB, import_songs, list_from_folder
 from tinydb import where
+
+from songdb.songdb import SongDB, import_songs, list_from_folder, splitline_from_file  # isort:skip
 
 
 def this_path(path):
@@ -70,19 +71,15 @@ class TestHelper(object):
 
     def test_import_songs(self, db):
         with open(this_path('test_songdb'), 'r') as f:
-            songs = [song.split()[0] for song in f]
-
-        with SongDB() as sdb:
-            import_songs(sdb, songs)
+            with SongDB() as sdb:
+                import_songs(sdb, splitline_from_file(f))
         assert db.get(where('song') == 'HeiligWO5')['link'] is None
         assert db.get(where('song') == 'HeiligWO5')['sheet'] is None
 
     def test_import_songs_full(self, db):
         with open(this_path('test_songdb_full'), 'r') as f:
-            songs = [song.rstrip('\n').split(',') for song in f]
-
-        with SongDB() as sdb:
-            import_songs(sdb, songs)
+            with SongDB() as sdb:
+                import_songs(sdb, splitline_from_file(f))
         assert db.get(where('song') == 'HeiligWO5')['link'] == 'link6'
         assert db.get(where('song') == 'HeiligWO5')['sheet'] == 'sheet6'
 
@@ -119,12 +116,15 @@ class TestHelper(object):
 class TestCmd(object):
 
     @mock.patch('songdb.cli.argparse')
-    def test_cli(self, mock_argparse):
+    def test_cli(self, mock_argparse, db):
         class mock_args():
             file = this_path('test_songdb')
 
         with mock.patch.object(cli.argparse.ArgumentParser(), 'parse_args', return_value=mock_args):
             cli.main()
+
+        assert db.get(where('song') == 'HeiligWO5')['link'] is None
+        assert db.get(where('song') == 'HeiligWO5')['sheet'] is None
 
     # work only in tox after setup.py installed
     def test_cmd_new_song(self, db):

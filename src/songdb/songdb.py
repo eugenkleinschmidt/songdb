@@ -1,4 +1,5 @@
 import os
+import typing
 from datetime import date, datetime
 
 from tinydb import Query, TinyDB
@@ -52,7 +53,7 @@ class SongDB(TinyDB):
 
     def new_song_entry(self, song: str, link: str = None, sheet: str = None):
         """
-        Create or update an a song. Update means new link or cheet path
+        Create or update an a song. Update means new link or sheet path
         :param song: Songname
         :param link: Link to song example e.g. youtube
         :param sheet: Path to music sheet
@@ -101,6 +102,11 @@ class SongDB(TinyDB):
         # Caching Middleware
         self.storage.storage._cache_modified_count = 0
         self.storage.storage.cache = None
+
+
+# Helper Functions
+def splitline_from_file(file_obj: typing.TextIO):
+    return [line.rstrip('\n').split(',') for line in file_obj]
 
 
 def import_songs(sdb: SongDB, songs: list):
