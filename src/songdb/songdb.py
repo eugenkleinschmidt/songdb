@@ -32,10 +32,10 @@ class SongDB(TinyDB):
         serialization = SerializationMiddleware(CachingMiddleware(JSONStorage))
         serialization.register_serializer(DateTimeSerializer(), 'TinyDate')
 
-        super().__init__(db, storage=serialization, sort_keys=True, indent=4,
+        super().__init__(db, storage=serialization, default_table='songs', sort_keys=True, indent=4,
                          separators=(',', ': '))
 
-        self._query = Query()
+        self.query = Query()
 
     @staticmethod
     def validate_date(date_text: str):
@@ -58,13 +58,13 @@ class SongDB(TinyDB):
         :param sheet: Path to music sheet
         :return:
         """
-        if self.contains(self._query.song == song):
+        if self.contains(self.query.song == song):
             if not link and not sheet:
                 log.warning(f'Song {song} already in DB. No addition information given')
             log.info(f'Update song {song}. \n\tLink: {link}\n\tSheet: {sheet}')
         else:
             log.info(f'New song {song}.')
-        self.upsert({'song': song, 'link': link, 'sheet': sheet}, self._query.song == song)
+        self.upsert({'song': song, 'link': link, 'sheet': sheet}, self.query.song == song)
 
     def update_song_date(self, song: str, setlist_date: str):
         """
@@ -73,7 +73,7 @@ class SongDB(TinyDB):
         :param setlist_date: date when song is/was performed
         :return:
         """
-        loc_song = self.search(self._query.song == song)
+        loc_song = self.search(self.query.song == song)
         if loc_song and len(loc_song) == 1:
             loc_song = loc_song[0]
             loc_date = SongDB.validate_date(setlist_date) if setlist_date else date.today()
@@ -89,10 +89,10 @@ class SongDB(TinyDB):
             log.warning(f'Song {song} not in DB. No update of dates.')
 
     def get_song_dates(self, song: str):
-        return self.search((self._query.song == song) & (self._query.dates.exists()))[0]['dates']
+        return self.search((self.query.song == song) & (self.query.dates.exists()))[0]['dates']
 
     def get_song_entry(self, song: str):
-        return self.search(self._query.song == song)
+        return self.search(self.query.song == song)
 
     def clear_cache(self):
         # Serializer Middleware
@@ -105,25 +105,19 @@ class SongDB(TinyDB):
 
 def import_songs(sdb: SongDB, songs: list):
     """
-    Inserting new songs form list into db
-    :param sdb: instance of SongDB
-    :param songs: list of songs
-    :return:
-    """
-    for song in songs:
-        if not sdb.get_song_entry(song):
-            sdb.new_song_entry(song)
-
-
-def update_songs(sdb: SongDB, songs: list):
-    """
     Updating songs from list of list (song, link, sheet)
     :param sdb: instance of SongDB
     :param songs: list of songs
     :return:
     """
     for song in songs:
-        sdb.new_song_entry(*song)
+        if isinstance(song, list):
+            if len(song) <= 3:
+                sdb.new_song_entry(*song)
+            else:
+                raise TypeError(f'new song has to much elements {song}')
+        else:
+            sdb.new_song_entry(song)
 
 
 def list_from_folder(path, ext='.pdf') -> list:
