@@ -2,7 +2,7 @@ from fpdf import FPDF
 from songdb.songdb import SongDB
 
 
-class SetList(FPDF):
+class Setlist(FPDF):
     COLOR_VIOLET = (150, 50, 100)
 
     def __init__(self):
@@ -30,24 +30,73 @@ class SetList(FPDF):
         self.cell(20)
         self.cell(0, 10, text, 0, ln=1, link=link)
 
-    def new_setlist(self, date, song_groups: list, force=False):
+    def new_setlist(self, name: str, date: str, song_groups: list):
         """
         Create new PDF Setlist for given date. Song groups are in order --> group title then all songs.
-        @param date: planned date for setlist
-        @param song_groups: list of song groups.
-        @param force: Insert song to database if not existing yet
-        @return: None
+        :param name: name of setlist
+        :param date: planned date for setlist
+        :param song_groups: list of song groups.
+        :return: None
         """
-        with SongDB() as sdb:
-            self.date(date if sdb.validate_date(date) else '')
-            for sg in song_groups:
-                self.group(sg[0])
-                for s in sg[1:]:
-                    if not force and not sdb.get_song_entry(s):
-                        # Clear cache if setlist is wrong and  will not be used
-                        # Database must have only songs which are used and reflect only (e.g. song sung on day x times)
-                        sdb.clear_cache()
-                        raise ValueError('Please insert this song first into your database', s)
-                    self.song(s)
-                    sdb.new_song_entry(s, date)
-            self.output('Setlist_' + date + '.pdf')
+        self.date(date if SongDB.validate_date(date) else '')
+        for sg in song_groups:
+            self.group(sg[0])
+            for s in sg[1:]:
+                with SongDB() as sdb:
+                    if not sdb.get_song_entry(s):
+                        pass  # log.warning(f'Song {s} not in database)
+                self.song(s)
+        self.output(f'Setlist_{date}.pdf')
+
+
+class SetlistDB(object):
+
+    def __init__(self, db: str = SongDB.SONG_DB_DEFAULT_PATH):
+        self.sdb = SongDB(db)
+        self.sldb = self.sdb.table('setlists')
+
+    def new_setlist_entry(self, name: str, date: str, songs: list):
+        """
+        Create or update an a song. Update means new link or cheet path
+        :param name: name of setlist
+        :param date: date of setlist
+        :param songs: list of songs
+        :return: setlist name and date as kinda setlist id
+        """
+        if self.sldb.contains((self.sdb.query.setlist == name) & (self.sdb.query.date == date)):
+            # log.info(f'Update setlist {name} for date {date} with new songs. \n\tSongs: {songs}')
+            self.sldb.upsert({'setlist': name, 'date': date, 'songs': songs},
+                             (self.sdb.query.setlist == name) & (self.sdb.query.date == date))
+        else:
+            # log.info(f'New setlist {name} for date {date} with songs. \n\tSongs: {songs}')
+            self.sldb.insert({'setlist': name, 'date': date, 'songs': songs})
+        return name, date
+
+    def get_setlist_entry(self, name: str, date: str):
+        return self.sldb.search((self.sdb.query.setlist == name) & (self.sdb.query.date == date))
+
+    def validate_setlist(self, name: str, date: str):
+        """
+        All songs of
+
+        :param name: name of setlist
+        :param date: date of setlist
+        :return:
+        """
+
+        loc_sl = self.sldb.search((self.sdb.query.setlist == name) & (self.sdb.query.date == date))
+        if len(loc_sl) == 1:
+            with SongDB() as sdb:
+                for s in loc_sl[0]['songs']:
+                    if sdb.get_song_entry(s):
+                        # TODO logging
+                        sdb.update_song_date(s, date)
+                    else:
+                        sdb.new_song_entry(s)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.sdb._opened:
+            self.sdb.close()
