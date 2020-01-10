@@ -4,11 +4,10 @@ import shutil
 
 import mock
 import pytest
+import songdb.cli as cli
 from conftest import check_installed
-from songdb import songdb, cli
+from songdb.songdb import SongDB, import_songs, list_from_folder
 from tinydb import where
-
-SongDB = songdb.SongDB
 
 
 def this_path(path):
@@ -41,7 +40,6 @@ class TestSongDB(object):
         assert db.get(where('song') == 'New_Song')['sheet'] is None
 
     def test_update_dates(self, db):
-        dates = []
         with SongDB() as sdb:
             sdb.update_song_date("Heilig", "01.02.2134")
             dates = sdb.get_song_dates("Heilig")
@@ -64,35 +62,36 @@ class TestSongDB(object):
         song_entry = sdb.get_song_entry('Heilig2')
         assert song_entry[0]['song'] == 'Heilig2'
 
-    def test_list_from_folder(self, db, tmpdir):
-        sdb = SongDB()
-        songlist = sdb.list_from_folder(unpack_test_data(tmpdir))
+
+class TestHelper(object):
+    def test_list_from_folder(self, tmpdir):
+        songlist = list_from_folder(unpack_test_data(tmpdir))
         assert 'Alles will ich Jesu weihen' in songlist
 
     def test_import_songs(self, db):
-        with open(this_path('test_songdb.txt'), 'r') as f:
+        with open(this_path('test_songdb'), 'r') as f:
             songs = [song.split()[0] for song in f]
 
         with SongDB() as sdb:
-            sdb.import_songs(songs)
+            import_songs(sdb, songs)
         assert db.get(where('song') == 'HeiligWO5')['link'] is None
-        assert db.get(where('song') == 'HeiligWO5')['sheet'] == 0
+        assert db.get(where('song') == 'HeiligWO5')['sheet'] is None
 
-    def test_update_songs(self, db):
-        with open(this_path('test_songdb_full.txt'), 'r') as f:
-            songs = {song.split(',')[0]: song.split(',')[1].split()[0] for song in f}
+    def test_import_songs_full(self, db):
+        with open(this_path('test_songdb_full'), 'r') as f:
+            songs = [song.rstrip('\n').split(',') for song in f]
 
         with SongDB() as sdb:
-            sdb.update_songs(songs)
-        assert '06.01.2019' in db.get(where('song') == 'HeiligWO5')['link']
-        assert db.get(where('song') == 'HeiligWO5')['sheet'] == 1
+            import_songs(sdb, songs)
+        assert db.get(where('song') == 'HeiligWO5')['link'] == 'link6'
+        assert db.get(where('song') == 'HeiligWO5')['sheet'] == 'sheet6'
 
     def test_clear_cache(self, db):
-        with open(this_path('test_songdb_full.txt'), 'r') as f:
-            songs = {song.split(',')[0]: song.split(',')[1].split()[0] for song in f}
+        with open(this_path('test_songdb_full'), 'r') as f:
+            songs = songs = [song.rstrip('\n').split(',') for song in f]
 
         with SongDB() as sdb:
-            sdb.update_songs(songs)
+            import_songs(sdb, songs)
             sdb.clear_cache()
         assert db.get(where('song') == 'HeiligWO5') is None
 
@@ -122,32 +121,32 @@ class TestCmd(object):
     @mock.patch('songdb.cli.argparse')
     def test_cli(self, mock_argparse):
         class mock_args():
-            file = this_path('test_songdb.txt')
+            file = this_path('test_songdb')
 
-        with mock.patch.object(songdb.cli.argparse.ArgumentParser(), 'parse_args', return_value=mock_args):
+        with mock.patch.object(cli.argparse.ArgumentParser(), 'parse_args', return_value=mock_args):
             cli.main()
 
     # work only in tox after setup.py installed
     def test_cmd_new_song(self, db):
-        os.system('songdb --new_song "Test Song" --date 01.02.3456')
-        assert '01.02.3456' in db.get(where('song') == 'Test Song')['link']
-        assert db.get(where('song') == 'Test Song')['sheet'] == 1
+        os.system('songdb --new_song "Test Song" --link link_test --sheet sheet_test')
+        assert db.get(where('song') == 'Test Song')['link'] == 'link_test'
+        assert db.get(where('song') == 'Test Song')['sheet'] == 'sheet_test'
 
         os.system('songdb --new_song "Test Song2"')
         assert db.get(where('song') == 'Test Song2')['link'] is None
-        assert db.get(where('song') == 'Test Song2')['sheet'] == 0
+        assert db.get(where('song') == 'Test Song2')['sheet'] is None
 
     def test_cmd_file(self, db):
-        os.system('songdb --file ' + this_path('test_songdb.txt'))
+        os.system('songdb --file ' + this_path('test_songdb'))
         assert db.get(where('song') == 'HeiligWO5')['link'] is None
-        assert db.get(where('song') == 'HeiligWO5')['sheet'] == 0
+        assert db.get(where('song') == 'HeiligWO5')['sheet'] is None
 
     def test_cmd_file_dates(self, db):
-        os.system('songdb --file ' + this_path('test_songdb_full.txt'))
-        assert '06.01.2019' in db.get(where('song') == 'HeiligWO5')['link']
-        assert db.get(where('song') == 'HeiligWO5')['sheet'] == 1
+        os.system('songdb --file ' + this_path('test_songdb_full'))
+        assert db.get(where('song') == 'HeiligWO5')['link'] == 'link6'
+        assert db.get(where('song') == 'HeiligWO5')['sheet'] == 'sheet6'
 
     def test_cmd_folder(self, db, tmpdir):
         os.system('songdb --path ' + unpack_test_data(tmpdir))
         assert db.get(where('song') == 'Alles will ich Jesu weihen')['link'] is None
-        assert db.get(where('song') == 'Alles will ich Jesu weihen')['sheet'] == 0
+        assert db.get(where('song') == 'Alles will ich Jesu weihen')['sheet'] is None

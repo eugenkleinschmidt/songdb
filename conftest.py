@@ -13,7 +13,7 @@ DB = (
 
 @pytest.fixture
 def db():
-    db = TinyDB(DB_PATH, sort_keys=True, indent=4, separators=(',', ': '))
+    db = TinyDB(DB_PATH, sort_keys=True, default_table='songs', indent=4, separators=(',', ': '))
     db.purge_tables()
     db.insert_multiple(DB)
     return db
