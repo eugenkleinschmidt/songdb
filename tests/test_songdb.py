@@ -4,9 +4,10 @@ import shutil
 
 import mock
 import pytest
+from tinydb import where
+
 import songdb.cli as cli
 from conftest import check_installed
-from tinydb import where
 
 from songdb.songdb import SongDB, import_songs, list_from_folder, splitline_from_file  # isort:skip
 

@@ -3,21 +3,14 @@ from datetime import date
 
 import mock
 import pytest
+from tinydb import where
+
 import setlist.cli as cli
 from conftest import check_installed
 from setlist.setlist import Setlist, SetlistDB
 from songdb.songdb import SongDB
-from tinydb import where
 
 song = ['HALLO', 'HALLO', 'HALLO', 'HALLO', 'HALLO', 'HALLO', 'HALLO', 'HALLO', 'HALLO', 'HALLO']
-
-
-def this_path(path):
-    return os.path.join(os.path.split(__file__)[0], path)
-
-
-def current_test_name():
-    return os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
 
 
 class TestSetlist(object):

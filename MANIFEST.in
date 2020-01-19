@@ -8,4 +8,4 @@ include requirements.txt
 include setup.cfg
 include tox.ini
 
-exclude *__pycache__* *json* *.pdf *.log
+exclude *__pycache__* *json* *.pdf *.log *.params

@@ -1,4 +1,5 @@
 from fpdf import FPDF
+
 from songdb.songdb import SongDB
 
 
@@ -43,7 +44,7 @@ class Setlist(FPDF):
             self.group(sg[0])
             for s in sg[1:]:
                 with SongDB() as sdb:
-                    if not sdb.get_song_entry(s):
+                    if not sdb.get_song_entry(s):  # pragma: no cover
                         pass  # log.warning(f'Song {s} not in database)
                 self.song(s)
         self.output(f'Setlist_{date}.pdf')
@@ -63,9 +64,9 @@ class SetlistDB(object):
         :param songs: list of songs
         :return: setlist name and date as kinda setlist id
         """
-        if self.sldb.contains((self.sdb.query.setlist == name) & (self.sdb.query.date == date)):
+        if self.sldb.contains((self.sdb.query.setlist == name) & (self.sdb.query.date == date)):  # pragma: no cover
             # log.info(f'Update setlist {name} for date {date} with new songs. \n\tSongs: {songs}')
-            self.sldb.upsert({'setlist': name, 'date': date, 'songs': songs},
+            self.sldb.upsert({'setlist': name, 'date': date, 'songs': songs},  # pragma: no cover
                              (self.sdb.query.setlist == name) & (self.sdb.query.date == date))
         else:
             # log.info(f'New setlist {name} for date {date} with songs. \n\tSongs: {songs}')
@@ -85,7 +86,7 @@ class SetlistDB(object):
         """
 
         loc_sl = self.sldb.search((self.sdb.query.setlist == name) & (self.sdb.query.date == date))
-        if len(loc_sl) == 1:
+        if len(loc_sl) == 1:  # pragma: no cover
             for s in loc_sl[0]['songs']:
                 if self.sdb.get_song_entry(s):
                     # TODO logging
@@ -97,5 +98,5 @@ class SetlistDB(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.sdb._opened:
+        if self.sdb._opened:  # pragma: no cover
             self.sdb.close()
