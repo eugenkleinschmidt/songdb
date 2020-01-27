@@ -42,6 +42,6 @@ jobs:
       run: |
           pip install pytest
           pip install pytest-cov
-          set PYTHONPATH=.\src
+          PYTHONPATH=.\src
           pytest --cov --cov-report=term-missing -vv
 
