@@ -42,6 +42,6 @@ jobs:
       run: |
           pip install pytest
           pip install pytest-cov
-          PYTHONPATH=songdb\src
+          set PYTHONPATH=.\src
           pytest --cov --cov-report=term-missing -vv
 
